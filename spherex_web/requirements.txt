@@ -1,0 +1,9 @@
+flask>=3.0
+numpy
+astropy>=6.0
+astroquery>=0.4.10
+matplotlib
+requests
+reproject
+pillow
+gunicorn

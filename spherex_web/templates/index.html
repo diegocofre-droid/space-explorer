@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SPHEREx Cronología</title>
+<style>
+  :root {
+    --bg: #070b16; --panel: #10172a; --panel2: #162038; --borde: #26335a;
+    --texto: #e6ebf8; --suave: #93a0c4; --acento: #6aa7ff; --acento2: #ff9b54;
+    --ok: #5fd39b; --aviso: #f2c14e; --error: #ff6b6b;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: radial-gradient(1200px 600px at 20% -10%, #14214a 0%, var(--bg) 60%) fixed;
+    color: var(--texto); font: 15px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  }
+  .wrap { max-width: 1100px; margin: 0 auto; padding: 28px 18px 60px; }
+  h1 { margin: 0 0 4px; font-size: 1.9rem; letter-spacing: .3px; }
+  .sub { color: var(--suave); margin: 0 0 22px; }
+  .panel { background: var(--panel); border: 1px solid var(--borde); border-radius: 14px; padding: 18px; }
+  label { display: block; font-size: .82rem; color: var(--suave); margin-bottom: 4px; }
+  input[type=text], input[type=number], select {
+    width: 100%; padding: 9px 11px; border-radius: 9px; border: 1px solid var(--borde);
+    background: var(--panel2); color: var(--texto); font: inherit;
+  }
+  input:focus, select:focus { outline: 2px solid var(--acento); border-color: transparent; }
+  .grid { display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); margin-top: 12px; }
+  .fila-objeto { display: flex; gap: 10px; flex-wrap: wrap; align-items: end; }
+  .fila-objeto > div:first-child { flex: 1 1 320px; }
+  button {
+    cursor: pointer; border: 0; border-radius: 10px; padding: 10px 20px; font: inherit; font-weight: 600;
+    background: linear-gradient(135deg, var(--acento), #8a7bff); color: #07101f;
+  }
+  button:disabled { opacity: .55; cursor: wait; }
+  .chips { margin-top: 10px; display: flex; gap: 8px; flex-wrap: wrap; align-items: center; color: var(--suave); font-size: .85rem; }
+  .chip { background: var(--panel2); color: var(--texto); border: 1px solid var(--borde); padding: 4px 10px; font-weight: 500; font-size: .82rem; border-radius: 999px; }
+  .chip:hover { border-color: var(--acento); }
+  details { margin-top: 14px; }
+  summary { cursor: pointer; color: var(--acento); }
+  .checks { display: flex; gap: 18px; flex-wrap: wrap; margin-top: 12px; }
+  .checks label { display: flex; gap: 7px; align-items: center; margin: 0; color: var(--texto); font-size: .9rem; }
+  .hint { color: var(--suave); font-size: .8rem; margin-top: 6px; }
+
+  #progreso { margin-top: 18px; display: none; }
+  .barra { height: 10px; border-radius: 99px; background: var(--panel2); overflow: hidden; border: 1px solid var(--borde); }
+  .barra > div { height: 100%; width: 0; background: linear-gradient(90deg, var(--acento), var(--acento2)); transition: width .4s; }
+  #log { margin: 10px 0 0; padding: 10px 12px; max-height: 140px; overflow: auto; background: #0a1020;
+         border: 1px solid var(--borde); border-radius: 9px; color: var(--suave); font: 12.5px/1.45 ui-monospace, Menlo, Consolas, monospace; white-space: pre-wrap; }
+  #error { display: none; margin-top: 16px; padding: 12px 14px; border-radius: 10px; border: 1px solid var(--error); color: #ffd0d0; background: #2a1216; }
+
+  #resultado { display: none; margin-top: 22px; }
+  .cols { display: grid; gap: 18px; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); }
+  @media (max-width: 860px) { .cols { grid-template-columns: 1fr; } }
+  .gifbox { text-align: center; }
+  .gifbox img { max-width: 100%; border-radius: 10px; border: 1px solid var(--borde); background: #000; }
+  .acciones { margin-top: 10px; display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+  a.btn { text-decoration: none; background: var(--panel2); color: var(--texto); border: 1px solid var(--borde);
+          padding: 7px 14px; border-radius: 9px; font-size: .88rem; }
+  a.btn:hover { border-color: var(--acento); }
+  h2 { font-size: 1.05rem; margin: 0 0 10px; }
+  dl { margin: 0; display: grid; grid-template-columns: auto 1fr; gap: 6px 14px; }
+  dt { color: var(--suave); }
+  dd { margin: 0; text-align: right; font-variant-numeric: tabular-nums; }
+  .avisos { margin: 14px 0 0; padding: 0; list-style: none; }
+  .avisos li { font-size: .85rem; padding: 7px 10px; margin-bottom: 6px; border-left: 3px solid var(--aviso); background: #1c1a10; border-radius: 6px; color: #f6e6b4; }
+  .tablaw { overflow-x: auto; margin-top: 18px; }
+  table { width: 100%; border-collapse: collapse; font-size: .85rem; font-variant-numeric: tabular-nums; }
+  th, td { padding: 7px 9px; border-bottom: 1px solid var(--borde); text-align: right; white-space: nowrap; }
+  th:first-child, td:first-child, th:nth-child(2), td:nth-child(2), th:nth-child(3), td:nth-child(3) { text-align: left; }
+  th { color: var(--suave); font-weight: 600; }
+  tr.activa td { background: #1b2a52; }
+  .extra img { max-width: 100%; border-radius: 10px; border: 1px solid var(--borde); margin-top: 8px; }
+  footer { margin-top: 30px; color: var(--suave); font-size: .8rem; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>SPHEREx Cronología</h1>
+  <p class="sub">Escribe un objeto o unas coordenadas y obtén un GIF con las observaciones de SPHEREx a lo largo del tiempo, con sus datos.</p>
+
+  <form id="form" class="panel" autocomplete="off">
+    <div class="fila-objeto">
+      <div>
+        <label for="objeto">Objeto o coordenadas</label>
+        <input type="text" id="objeto" name="objeto" required maxlength="120"
+               placeholder='M101 · NGC 1300 · Barnard&#39;s star · 210.80227 54.34895 · 14:03:12.5 +54:20:56'>
+      </div>
+      <button type="submit" id="boton">Generar cronología</button>
+    </div>
+    <div class="chips">
+      Ejemplos:
+      <button type="button" class="chip" data-v="M101">M101 (galaxia)</button>
+      <button type="button" class="chip" data-v="Barnard's star">Estrella de Barnard (movimiento propio)</button>
+      <button type="button" class="chip" data-v="210.80227 54.34895">Coordenadas en grados</button>
+    </div>
+
+    <div class="grid">
+      <div>
+        <label for="n_imagenes">Nº de imágenes (2–12)</label>
+        <input type="number" id="n_imagenes" value="6" min="2" max="12">
+      </div>
+      <div>
+        <label for="size_arcmin">Tamaño del recorte (arcmin)</label>
+        <input type="number" id="size_arcmin" value="6" min="1" max="30" step="0.5">
+      </div>
+      <div>
+        <label for="detector">Detector</label>
+        <select id="detector">
+          {% for d in detectores %}<option value="{{ d }}" {% if d == 'D2' %}selected{% endif %}>{{ d }}</option>{% endfor %}
+        </select>
+      </div>
+      <div>
+        <label for="fps">Velocidad (cuadros/s)</label>
+        <input type="number" id="fps" value="2" min="1" max="5">
+      </div>
+    </div>
+
+    <div class="checks">
+      {% for c in colecciones %}
+      <label><input type="checkbox" class="coleccion" value="{{ c }}" checked> {{ c.replace('spherex_', '')|upper }}</label>
+      {% endfor %}
+      <label><input type="checkbox" id="rellenar" checked> Rellenar huecos (NaN) junto al objeto</label>
+      <label><input type="checkbox" id="marcar" checked> Marcar el objeto</label>
+    </div>
+
+    <details>
+      <summary>Movimiento propio (opcional)</summary>
+      <p class="hint">Para estrellas, se toma de SIMBAD automáticamente. Rellena estos campos solo para sobrescribirlo (época J2000).</p>
+      <div class="grid">
+        <div><label for="pm_ra">PM RA·cos(dec) (mas/año)</label><input type="number" id="pm_ra" step="any"></div>
+        <div><label for="pm_dec">PM Dec (mas/año)</label><input type="number" id="pm_dec" step="any"></div>
+        <div><label for="parallax">Paralaje (mas)</label><input type="number" id="parallax" step="any"></div>
+        <div><label for="rv">Vel. radial (km/s)</label><input type="number" id="rv" step="any"></div>
+      </div>
+    </details>
+  </form>
+
+  <div id="progreso" class="panel">
+    <div class="barra"><div id="barra"></div></div>
+    <pre id="log"></pre>
+  </div>
+  <div id="error"></div>
+
+  <section id="resultado">
+    <div class="cols">
+      <div class="panel gifbox">
+        <h2 id="titulo-res"></h2>
+        <img id="gif" alt="Cronología animada">
+        <div class="acciones">
+          <a class="btn" id="dl-gif" download>Descargar GIF</a>
+          <a class="btn" id="dl-csv" download>Descargar CSV</a>
+        </div>
+      </div>
+      <div class="panel">
+        <h2>Datos</h2>
+        <dl id="datos"></dl>
+        <ul class="avisos" id="avisos"></ul>
+      </div>
+    </div>
+
+    <div class="panel tablaw">
+      <h2>Observaciones</h2>
+      <table id="tabla">
+        <thead><tr>
+          <th>#</th><th>Fecha</th><th>Colección</th><th>obs_id</th>
+          <th>λ (µm)</th><th>Ancho (µm)</th><th>RA (°)</th><th>Dec (°)</th><th id="th-valor">Valor central</th>
+        </tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+
+    <div class="panel extra" style="margin-top:18px">
+      <h2>Comparación en la misma escala</h2>
+      <img id="img-rejilla" alt="Rejilla comparativa">
+      <div id="bloque-mov" style="display:none">
+        <h2 style="margin-top:18px">Movimiento medido vs. esperado</h2>
+        <img id="img-mov" alt="Movimiento medido">
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    Fuente: SPHEREx vía NASA/IPAC IRSA. Herramienta de inspección visual: cada imagen se toma en una longitud de onda distinta
+    y no se igualan PSF, fondos ni calibraciones.
+  </footer>
+</div>
+
+<script>
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const fmt = (x, d = 4) => (x === null || x === undefined || Number.isNaN(x)) ? "n/d" : Number(x).toFixed(d);
+
+document.querySelectorAll(".chip").forEach((b) =>
+  b.addEventListener("click", () => { $("objeto").value = b.dataset.v; $("objeto").focus(); })
+);
+
+let timer = null;
+
+$("form").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  clearInterval(timer);
+  $("error").style.display = "none";
+  $("resultado").style.display = "none";
+  $("barra").style.width = "0%";
+  $("log").textContent = "";
+  $("progreso").style.display = "block";
+  $("boton").disabled = true;
+
+  const cuerpo = {
+    objeto: $("objeto").value,
+    n_imagenes: $("n_imagenes").value,
+    size_arcmin: $("size_arcmin").value,
+    detector: $("detector").value,
+    fps: $("fps").value,
+    colecciones: [...document.querySelectorAll(".coleccion:checked")].map((c) => c.value),
+    rellenar: $("rellenar").checked,
+    marcar: $("marcar").checked,
+    pm_ra: $("pm_ra").value, pm_dec: $("pm_dec").value,
+    parallax: $("parallax").value, rv: $("rv").value,
+  };
+
+  try {
+    const r = await fetch("/api/analizar", {
+      method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(cuerpo),
+    });
+    const j = await r.json();
+    if (!r.ok) throw new Error(j.error || "Error al enviar la solicitud");
+    sondear(j.job_id);
+  } catch (err) {
+    mostrarError(err.message);
+  }
+});
+
+function sondear(jobId) {
+  timer = setInterval(async () => {
+    try {
+      const r = await fetch(`/api/estado/${jobId}`);
+      const j = await r.json();
+      if (!r.ok) throw new Error(j.error || "Trabajo no encontrado");
+      $("barra").style.width = `${j.progreso || 0}%`;
+      $("log").textContent = (j.log || []).join("\n");
+      $("log").scrollTop = $("log").scrollHeight;
+      if (j.estado === "listo") {
+        clearInterval(timer);
+        $("boton").disabled = false;
+        mostrarResultado(jobId, j.resultado);
+      } else if (j.estado === "error") {
+        clearInterval(timer);
+        mostrarError(j.error);
+      }
+    } catch (err) {
+      clearInterval(timer);
+      mostrarError(err.message);
+    }
+  }, 1200);
+}
+
+function mostrarError(msg) {
+  $("boton").disabled = false;
+  $("progreso").style.display = "none";
+  $("error").textContent = msg;
+  $("error").style.display = "block";
+}
+
+function mostrarResultado(jobId, r) {
+  const base = `/salidas/${jobId}/`;
+  const o = r.objeto, s = r.resumen;
+
+  $("titulo-res").textContent = `${o.nombre} · ${s.fecha_inicial} → ${s.fecha_final}`;
+  $("gif").src = base + r.archivos.gif + "?t=" + Date.now();
+  $("dl-gif").href = base + r.archivos.gif;
+  $("dl-csv").href = base + r.archivos.csv;
+  $("img-rejilla").src = base + r.archivos.rejilla;
+  if (r.archivos.movimiento) {
+    $("img-mov").src = base + r.archivos.movimiento;
+    $("bloque-mov").style.display = "block";
+  } else {
+    $("bloque-mov").style.display = "none";
+  }
+
+  const filas = [
+    ["Objeto", o.nombre],
+    ["Fuente de posición", o.fuente],
+    ["RA (J2000)", fmt(o.ra, 5) + "°"],
+    ["Dec (J2000)", fmt(o.dec, 5) + "°"],
+  ];
+  if (o.pm_ra || o.pm_dec) {
+    filas.push(["PM RA·cos(dec)", fmt(o.pm_ra, 1) + " mas/año"], ["PM Dec", fmt(o.pm_dec, 1) + " mas/año"]);
+    if (o.parallax) filas.push(["Paralaje", fmt(o.parallax, 2) + " mas"]);
+  }
+  filas.push(
+    ["Detector", r.parametros.detector],
+    ["Observaciones disponibles", s.n_disponibles],
+    ["Observaciones usadas", s.n_usadas],
+    ["Rango de λ", s.rango_lambda_um === null ? "n/d" : fmt(s.rango_lambda_um, 3) + " µm"],
+    ["Cobertura común", fmt(s.cobertura_comun_pct, 1) + " %"],
+    ["Unidad del FITS", s.unidad],
+    ["Versión de datos", s.version],
+  );
+  if (r.movimiento) {
+    const m = r.movimiento;
+    filas.push(
+      ["PM medido RA·cos(dec)", fmt(m.medido_ra_mas_ano, 0) + " mas/año"],
+      ["PM medido Dec", fmt(m.medido_dec_mas_ano, 0) + " mas/año"],
+    );
+  }
+  $("datos").innerHTML = filas.map(([k, v]) => `<dt>${esc(k)}</dt><dd>${esc(v)}</dd>`).join("");
+  $("avisos").innerHTML = r.avisos.map((a) => `<li>${esc(a)}</li>`).join("");
+
+  $("th-valor").textContent = `Valor central (${s.unidad})`;
+  $("tabla").querySelector("tbody").innerHTML = r.observaciones.map((f) => `
+    <tr>
+      <td>${esc(f.n)}</td><td>${esc(f.fecha)}</td><td>${esc(f.coleccion)}</td><td>${esc(f.obs_id)}</td>
+      <td>${fmt(f.lambda_um, 4)}</td><td>${fmt(f.ancho_um, 4)}</td>
+      <td>${fmt(f.ra, 5)}</td><td>${fmt(f.dec, 5)}</td><td>${fmt(f.valor_central, 3)}</td>
+    </tr>`).join("");
+
+  $("progreso").style.display = "none";
+  $("resultado").style.display = "block";
+  $("resultado").scrollIntoView({ behavior: "smooth", block: "start" });
+}
+</script>
+</body>
+</html>
